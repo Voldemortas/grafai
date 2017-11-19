@@ -1,0 +1,69 @@
+<style>
+tr{
+  height: 20px;
+}
+td{
+  width: 20px;
+}
+table, td, th{
+  border: 1px solid #ddd;
+}
+table{
+  display: inline-block;
+  padding: 10px;
+}
+</style>
+Mažiausio kelio iki kaimyno metodas
+<br />
+<textarea id='edges' placeholder='Briaunu masyvas' onchange="draw();" onkeyup="draw()">
+0 5 4 6 2
+5 0 3 7 4
+4 3 0 5 6
+6 7 5 0 8
+2 4 6 8 0</textarea>
+<br />
+<span id="tables"></span>
+<script>
+draw();
+function draw(){
+  let matrica = document.getElementById('edges').value.split('\n');
+  for(let i = 0; i < matrica.length; i++){
+    matrica[i] = matrica[i].split(' ');
+  }
+  let div = document.getElementById('tables');
+  div.innerHTML += table(0, matrica);
+  let times = matrica.length;
+  let small = smaller(matrica, 0);
+  for(let i = 1; i < times; i++){
+    div.innerHTML += table(small[1], small[0]);
+      small = smaller(small[0], small[1]);
+  }
+}
+function table(id, matrica){
+  let table = '<table id=\'a'+id+'\'>';
+  for(let i = 0; i < matrica.length; i++){
+    table += '<tr>';
+    for(let j = 0; j < matrica[i].length; j++){
+      table += '<td>' + matrica[i][j] + '</td>';
+    }
+    table += '</tr>';
+  }
+  table += '</table>';
+  return table;
+}
+function smaller(matrica, pos){
+  console.log(pos);
+  let index = 0;
+  let min = Infinity;
+  for(let i = 0; i < matrica[pos].length; i++){
+    if(matrica[pos][i] < min && matrica[pos][i] != 0){
+      index = i;
+      min = matrica[pos][i];
+    }
+  }
+  for(let i = 0; i < matrica.length; i++){
+    matrica[i].splice(pos, 1);
+  }
+  return [matrica, index];
+}
+</script>

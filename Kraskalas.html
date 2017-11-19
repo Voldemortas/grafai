@@ -1,0 +1,166 @@
+<style>
+  textarea{
+    max-height: 55px;
+    min-height: 55px;
+    min-width: 300px;
+    margin-left: 1px;
+  }
+  canvas{
+    border-style: solid;
+    border-width: thin;
+  }
+  button{
+    width: 400px;
+    height: 25px;
+    margin-bottom: 4px;
+    margin-left: 1px;
+  }
+</style>
+<textarea id='edges' placeholder='Briaunu masyvas' onchange="draw();" onkeyup="draw()">
+1 1 2 2 3 3 4 5 1
+2 5 3 6 4 6 5 6 6
+1 3 4 1 5 8 6 3 2</textarea>
+<br />
+<canvas id="graphs" width="400" height="400"></canvas>
+<canvas id="tree" width="400" height="400"></canvas>
+<script>
+draw();
+function draw(){
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  matrica[2] = matrica[2].split(' ');
+  let circles = {};
+  let a = 200;
+  let b = 200;
+  let r = 160;
+  let radius = 15;
+  let image = document.getElementById('graphs');
+  let canvas = image.getContext("2d");
+  canvas.clearRect(0, 0, 400, 400);
+  if(matrica[0].length != matrica[1].length){
+    canvas.fillText('Bloga briaunu matrica', 200, 200);
+    return;
+  }
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let color = "#56adff";
+  canvas.textAlign="center";
+  canvas.textBaseline="middle";
+  canvas.font="20px Arial";
+  for(let i = 0; i < keys.length; i++){
+    let x = a+r*Math.cos((i*Math.PI*2/keys.length)-Math.PI/2);
+    let y = b+r*Math.sin((i*Math.PI*2/keys.length)-Math.PI/2);
+    canvas.beginPath();
+    canvas.fillStyle = color;
+    canvas.arc(x, y, radius, 0 , 2*Math.PI);
+    canvas.fill();
+    canvas.fillStyle = 'black';
+    canvas.fillText(keys[i], x, y);
+    circles[keys[i]] = [x, y];
+  }
+  let medis = document.getElementById('tree');
+  let tree = medis.getContext('2d');
+  tree.clearRect(0, 0, 400, 400);
+  tree.drawImage(image, 0, 0);
+  /////////////////////////////////////////////////
+  canvas.globalCompositeOperation = 'destination-over';
+  canvas.strokeStyle = '#C0C0C0';
+  canvas.font="30px Arial";
+  canvas.fillStyle = '#42f453';
+  for(let i = 0; i < matrica[0].length; i++){
+      canvas.beginPath();
+      canvas.moveTo(circles[matrica[0][i]][0], circles[matrica[0][i]][1]);
+      canvas.lineTo(circles[matrica[1][i]][0], circles[matrica[1][i]][1]);
+      let x = (circles[matrica[0][i]][0] + circles[matrica[1][i]][0])/2;
+      let y = (circles[matrica[0][i]][1] + circles[matrica[1][i]][1])/2;
+      canvas.fillText(matrica[2][i], x, y);
+      canvas.stroke();
+      canvas.fill();
+  }
+  canvas.globalCompositeOperation = 'source-over';
+  //////////////////////////////////////
+  let gilyn = matrix();
+  tree.globalCompositeOperation = 'destination-over';
+  tree.strokeStyle = '#C0C0C0';
+  tree.textAlign="center";
+  tree.textBaseline="middle";
+  tree.font="30px Arial";
+  tree.fillStyle = '#42f453';
+  for(let i = 0; i < gilyn.length; i++){
+    tree.beginPath();
+    tree.moveTo(circles[gilyn[i][0]][0], circles[gilyn[i][0]][1]);
+    tree.lineTo(circles[gilyn[i][1]][0], circles[gilyn[i][1]][1]);
+    tree.stroke();
+    let x = (circles[gilyn[i][0]][0] + circles[gilyn[i][1]][0])/2;
+    let y = (circles[gilyn[i][0]][1] + circles[gilyn[i][1]][1])/2;
+    for(let j = 0; j < matrica[0].length; j++){
+      if(gilyn[i][0] == matrica[0][j] && gilyn[i][1] == matrica[1][j]){
+        tree.fillText(matrica[2][j], x, y);
+      }
+    }
+    tree.fill();
+  }
+  tree.globalCompositeOperation = 'source-over';
+}
+function matrix(){
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  matrica[2] = matrica[2].split(' ');
+  let eile = queue(matrica[2]);
+  let res = [];
+  let visited = {};
+  for(let i = 0; i < keys.length; i++){
+    visited[keys[i]] = false;//keys[i];
+  }
+  for(let i = 0; i < eile.length; i++){
+    if(!visited[matrica[0][eile[i]]] || !visited[matrica[1][eile[i]]]){
+      visited[matrica[1][eile[i]]] = true;
+      visited[matrica[0][eile[i]]] = true;
+      res.push([matrica[0][eile[i]], matrica[1][eile[i]]]);
+    }
+  }
+  return res;
+}
+function queue(input){
+  let masyvas = input.slice(0);
+	let res = [];
+	let lastMin = Infinity;
+	let lastId = -1;
+	while(res.length != masyvas.length){
+		let min = Math.min(...masyvas);
+		if(min == lastMin){
+			lastId++;
+    }else{
+			lastId = 0;
+    }
+		lastMin = min;
+		let id = masyvas.indexOf(min +  '', lastId);
+		masyvas[id] = Infinity;
+		res.push(id);
+    }
+	return res;
+}
+function structure() {
+  let grafas = {};
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  for(let i = 0; i < matrica[0].length; i++){
+    if(matrica[0][i] != matrica[1][i]){
+      if(typeof grafas[matrica[0][i]] === 'undefined'){
+        grafas[matrica[0][i]] = [];
+      }
+      if(typeof grafas[matrica[1][i]] === 'undefined'){
+        grafas[matrica[1][i]] = [];
+      }
+      grafas[matrica[0][i]].push(matrica[1][i]);
+      grafas[matrica[1][i]].push(matrica[0][i]);
+    }
+  }
+  return grafas;
+}
+</script>

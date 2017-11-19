@@ -1,0 +1,174 @@
+<style>
+  textarea{
+    max-height: 38px;
+    min-height: 38px;
+    min-width: 300px;
+    margin-left: 1px;
+  }
+  canvas{
+    border-style: solid;
+    border-width: thin;
+  }
+  button{
+    width: 400px;
+    height: 25px;
+    margin-bottom: 4px;
+    margin-left: 1px;
+  }
+</style>
+<textarea id='edges' placeholder='Briaunu masyvas' onchange="draw();" onkeyup="draw()">
+1 1 2 2 2 3 3 4 5 5 6 6 6 7 7
+2 3 3 7 8 4 5 5 6 8 7 8 9 8 9</textarea>
+<br />
+<canvas id="graphs" width="400" height="400"></canvas>
+<canvas id="tree" width="400" height="400"></canvas>
+<br />
+<textarea id='output' placeholder='Atsakymas' style='overflow:hidden' disabled></textarea>
+<script>
+draw();
+function draw(){
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  let circles = {};
+  let a = 200;
+  let b = 200;
+  let r = 160;
+  let radius = 15;
+  let image = document.getElementById('graphs');
+  let canvas = image.getContext("2d");
+  canvas.clearRect(0, 0, 400, 400);
+  if(matrica[0].length != matrica[1].length ){
+    canvas.fillText('Bloga briaunu matrica', 200, 200);
+    return;
+  }
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let color = "#56adff";
+  canvas.textAlign="center";
+  canvas.textBaseline="middle";
+  canvas.font="20px Arial";
+  for(let i = 0; i < keys.length; i++){
+    let x = a+r*Math.cos((i*Math.PI*2/keys.length)-Math.PI/2);
+    let y = b+r*Math.sin((i*Math.PI*2/keys.length)-Math.PI/2);
+    canvas.beginPath();
+    canvas.fillStyle = color;
+    canvas.arc(x, y, radius, 0 , 2*Math.PI);
+    canvas.fill();
+    canvas.fillStyle = 'black';
+    canvas.fillText(keys[i], x, y);
+    circles[keys[i]] = [x, y];
+  }
+  let medis = document.getElementById('tree');
+  let tree = medis.getContext('2d');
+  tree.clearRect(0, 0, 400, 400);
+  tree.drawImage(image, 0, 0);
+  /////////////////////////////////////////////////
+  canvas.globalCompositeOperation = 'destination-over';
+  canvas.strokeStyle = 'black';
+  for(let i = 0; i < keys.length; i++){
+    for(let j = 0; j < nodes[keys[i]].length; j++){
+      canvas.beginPath();
+      canvas.moveTo(circles[keys[i]][0], circles[keys[i]][1]);
+      canvas.lineTo(circles[nodes[keys[i]][j]][0], circles[nodes[keys[i]][j]][1]);
+      canvas.stroke();
+    }
+  }
+  canvas.globalCompositeOperation = 'source-over';
+  //////////////////////////////////////
+  if(imPossible()){
+    tree.clearRect(0, 0, 400, 400);
+    tree.fillText('Neįmanoma sudaryti Oilerio grandinės', 200, 200);
+    document.getElementById('output').innerHTML = 'Negalima';
+    return;
+  }
+  let gilyn = matrix();
+  tree.globalCompositeOperation = 'destination-over';
+  tree.strokeStyle = '#C0C0C0';
+  tree.textAlign="center";
+  tree.textBaseline="middle";
+  tree.font="20px Arial";
+  tree.fillStyle = '#42f453';
+  for(let i = 0; i < gilyn.length; i++){
+    tree.beginPath();
+    tree.moveTo(circles[gilyn[i][0]][0], circles[gilyn[i][0]][1]);
+    tree.lineTo(circles[gilyn[i][1]][0], circles[gilyn[i][1]][1]);
+    tree.stroke();
+    let x = (circles[gilyn[i][0]][0] + circles[gilyn[i][1]][0])/2;
+    let y = (circles[gilyn[i][0]][1] + circles[gilyn[i][1]][1])/2;
+    tree.fillText(i, x, y);
+  }
+  tree.globalCompositeOperation = 'source-over';
+}
+function matrix(){
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let res = [];
+  let visited = {};
+  let temp = 0;
+  for(let i = 0; i < keys.length; i++){
+	   visited[keys[i]] = {};
+     for(let j = 0; j < nodes[keys[i]].length; j++){
+       visited[keys[i]][nodes[keys[i]][j]] = false;
+     }
+  }  
+  let name = keys[0];
+  let = nelyginis = 0;
+  for(let i = 0; i < keys.length; i++){
+    if(nodes[keys[i]].length%2 == 1){
+      name = keys[i];
+      i = keys.length;
+    }
+  }
+  let recursion = (name, source = undefined) => {
+    for(let i = 0; i < nodes[name].length; i++){
+  	  if(!visited[nodes[name][i]][name]){
+        visited[nodes[name][i]][name] = true;
+        visited[name][nodes[name][i]] = true;
+  	 	  recursion(nodes[name][i], name);
+  	  }
+    }
+    if(source != undefined){
+      res.push([name, source]);
+    }
+  };
+  recursion(name);
+  let out = document.getElementById('output');
+  out.innerHTML  = res[0][0];
+  for(let i = 0; i < res.length; i++){
+    out.innerHTML  += ' ' + res[i][1];
+  }
+  return res;
+}
+
+function structure() {
+  let grafas = {};
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  for(let i = 0; i < matrica[0].length; i++){
+    if(matrica[0][i] != matrica[1][i]){
+      if(typeof grafas[matrica[0][i]] === 'undefined'){
+        grafas[matrica[0][i]] = [];
+      }
+      if(typeof grafas[matrica[1][i]] === 'undefined'){
+        grafas[matrica[1][i]] = [];
+      }
+      grafas[matrica[0][i]].push(matrica[1][i]);
+      grafas[matrica[1][i]].push(matrica[0][i]);
+    }
+  }
+  return grafas;
+}
+function imPossible(){
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let = nelyginis = 0;
+  for(let i = 0; i < keys.length; i++){
+    if(nodes[keys[i]].length%2 == 1){
+      nelyginis++;
+    }
+  }
+  return !(nelyginis == 0 || nelyginis == 2)
+}
+</script>

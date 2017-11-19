@@ -1,0 +1,131 @@
+<style>
+  textarea{
+    max-height: 38px;
+    min-height: 38px;
+    min-width: 300px;
+    margin-left: 1px;
+  }
+  canvas{
+    border-style: solid;
+    border-width: thin;
+  }
+  button{
+    width: 400px;
+    height: 25px;
+    margin-bottom: 4px;
+    margin-left: 1px;
+  }
+</style>
+<textarea id='edges' placeholder='Briaunu masyvas' onchange="draw();" onkeyup="draw()">
+0 0 0 1 3 4
+1 2 5 2 4 5</textarea>
+<br />
+<canvas id="graphs" width="400" height="400"></canvas>
+<canvas id="tree" width="400" height="400"></canvas>
+<script>
+draw();
+function draw(){
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  let circles = {};
+  let a = 200;
+  let b = 200;
+  let r = 160;
+  let radius = 15;
+  let image = document.getElementById('graphs');
+  let canvas = image.getContext("2d");
+  canvas.clearRect(0, 0, 400, 400);
+  if(matrica[0].length != matrica[1].length){
+    canvas.fillText('Bloga briaunu matrica', 200, 200);
+    return;
+  }
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let color = "#56adff";
+  canvas.textAlign="center";
+  canvas.textBaseline="middle";
+  canvas.font="20px Arial";
+  for(let i = 0; i < keys.length; i++){
+    let x = a+r*Math.cos((i*Math.PI*2/keys.length)-Math.PI/2);
+    let y = b+r*Math.sin((i*Math.PI*2/keys.length)-Math.PI/2);
+    canvas.beginPath();
+    canvas.fillStyle = color;
+    canvas.arc(x, y, radius, 0 , 2*Math.PI);
+    canvas.fill();
+    canvas.fillStyle = 'black';
+    canvas.fillText(keys[i], x, y);
+    circles[keys[i]] = [x, y];
+  }
+  let medis = document.getElementById('tree');
+  let tree = medis.getContext('2d');
+  tree.clearRect(0, 0, 400, 400);
+  tree.drawImage(image, 0, 0);
+  /////////////////////////////////////////////////
+  canvas.globalCompositeOperation = 'destination-over';
+  canvas.strokeStyle = 'black';
+  for(let i = 0; i < keys.length; i++){
+    for(let j = 0; j < nodes[keys[i]].length; j++){
+      canvas.beginPath();
+      canvas.moveTo(circles[keys[i]][0], circles[keys[i]][1]);
+      canvas.lineTo(circles[nodes[keys[i]][j]][0], circles[nodes[keys[i]][j]][1]);
+      canvas.stroke();
+    }
+  }
+  canvas.globalCompositeOperation = 'source-over';
+  //////////////////////////////////////
+  let gilyn = matrix();
+  tree.globalCompositeOperation = 'destination-over';
+  tree.strokeStyle = 'black';
+  for(let i = 0; i < gilyn.length; i++){
+    tree.beginPath();
+    tree.moveTo(circles[gilyn[i][0]][0], circles[gilyn[i][0]][1]);
+    tree.lineTo(circles[gilyn[i][1]][0], circles[gilyn[i][1]][1]);
+    tree.stroke();
+  }
+  tree.globalCompositeOperation = 'source-over';
+}
+function matrix(){
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let res = [];
+  let visited = {};
+  let temp = 0;
+  for(let i = 0; i < keys.length; i++){
+	visited[keys[i]] = false;
+  }
+  let name = keys[0];
+  let k = 0;
+  let recursion = (name) => {
+    visited[name] = true;
+    for(let i = 0; i < nodes[name].length; i++){
+	  if(!visited[nodes[name][i]]){
+	    res.push([name, nodes[name][i]]);
+	 	recursion(nodes[name][i]);
+	  }
+    }
+  };
+  recursion(name);
+  return res;
+}
+
+function structure() {
+  let grafas = {};
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  for(let i = 0; i < matrica[0].length; i++){
+    if(matrica[0][i] != matrica[1][i]){
+      if(typeof grafas[matrica[0][i]] === 'undefined'){
+        grafas[matrica[0][i]] = [];
+      }
+      if(typeof grafas[matrica[1][i]] === 'undefined'){
+        grafas[matrica[1][i]] = [];
+      }
+      grafas[matrica[0][i]].push(matrica[1][i]);
+      grafas[matrica[1][i]].push(matrica[0][i]);
+    }
+  }
+  return grafas;
+}
+</script>

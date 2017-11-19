@@ -1,0 +1,116 @@
+<style>
+  textarea{
+    max-height: 38px;
+    min-height: 38px;
+    min-width: 400px;
+    margin-left: 1px;
+  }
+  canvas{
+    border-style: solid;
+    border-width: thin;
+  }
+  button{
+    width: 400px;
+    height: 25px;
+    margin-bottom: 4px;
+    margin-left: 1px;
+  }
+</style>
+<textarea id='edges' placeholder='Briaunu masyvas' onchange="draw();" onkeyup="draw()">
+1 1 2 2 5 5
+2 5 4 3 7 6</textarea>
+</style>
+<br />
+<canvas id="graphs" width="400" height="400"></canvas>
+<br />
+<textarea id='output' placeholder='Atsakymas' style='font-size: 24px; overflow:hidden' disabled></textarea>
+<script>
+draw();
+function draw(){
+  keli();
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  let circles = {};
+  let a = 200;
+  let b = 200;
+  let r = 160;
+  let radius = 15;
+  let image = document.getElementById('graphs');
+  let canvas = image.getContext("2d");
+  canvas.clearRect(0, 0, 400, 400);
+  if(matrica[0].length != matrica[1].length){
+    canvas.fillText('Bloga briaunu matrica', 200, 200);
+    return;
+  }
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let color = "#56adff";
+  canvas.textAlign="center";
+  canvas.textBaseline="middle";
+  canvas.font="20px Arial";
+  for(let i = 0; i < keys.length; i++){
+    let x = a+r*Math.cos((i*Math.PI*2/keys.length)-Math.PI/2);
+    let y = b+r*Math.sin((i*Math.PI*2/keys.length)-Math.PI/2);
+    canvas.beginPath();
+    canvas.fillStyle = color;
+    canvas.arc(x, y, radius, 0 , 2*Math.PI);
+    canvas.fill();
+    canvas.fillStyle = 'black';
+    canvas.fillText(keys[i], x, y);
+    circles[keys[i]] = [x, y];
+  }
+  canvas.globalCompositeOperation = 'destination-over';
+  canvas.strokeStyle = '#C0C0C0';
+  for(let i = 0; i < matrica[0].length; i++){
+      canvas.beginPath();
+      canvas.moveTo(circles[matrica[0][i]][0], circles[matrica[0][i]][1]);
+      canvas.lineTo(circles[matrica[1][i]][0], circles[matrica[1][i]][1]);
+      canvas.stroke();
+  }
+  canvas.globalCompositeOperation = 'source-over';
+}
+function structure() {
+  let grafas = {};
+  let matrica = document.getElementById('edges').value.split('\n');
+  matrica[0] = matrica[0].split(' ');
+  matrica[1] = matrica[1].split(' ');
+  for(let i = 0; i < matrica[0].length; i++){
+    if(matrica[0][i] != matrica[1][i]){
+      if(typeof grafas[matrica[0][i]] === 'undefined'){
+        grafas[matrica[0][i]] = [];
+      }
+      if(typeof grafas[matrica[1][i]] === 'undefined'){
+        grafas[matrica[1][i]] =  [];
+      }
+      grafas[matrica[0][i]].push(matrica[1][i]);
+      grafas[matrica[1][i]].push(matrica[0][i]);
+    }
+  }
+  return grafas;
+}
+function keli(){
+  let nodes = structure();
+  let keys = Object.keys(nodes);
+  let res = [];
+  while(res.length != keys.length-2){
+    let key = Object.keys(nodes);
+    for(let i = 0; i < key.length; i++){
+      if(nodes[key[i]].length == 1){
+        let temp = nodes[key[i]][0];
+        delete nodes[key[i]];
+        let index = nodes[temp].indexOf(key[i]+'');
+        nodes[temp].splice(index, 1);
+        res.push([key[i], temp]);
+        i = key.length;
+      }
+    }
+  }
+  console.log(res);
+  let out = document.getElementById('output');
+  out.innerHTML  = res[0][1];
+  for(let i = 1; i < res.length; i++){
+    out.innerHTML  += ' ' + res[i][1];
+  }
+}
+</script>
