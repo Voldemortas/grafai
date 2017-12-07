@@ -1,0 +1,95 @@
+<style>
+#control{
+  text-align: center;
+  height: 100%;
+  width: 20%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+}
+#monitor{
+  font-family: monospace;
+  height: 100%;
+  width: 80%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 20%;
+  border-style: dashed;
+  border-color: #C0C0C0;
+  border-top: 0;
+  border-bottom: 0;
+  overflow: auto;
+}
+textarea{
+  min-width: 100%;
+  height: 100px;
+  max-width: 100%;
+}
+input{
+  width: 99%;
+  height: 40px;
+}
+button{
+  width: 99%;
+  height: 40px;
+}
+</style>
+<div id="control">
+  <input type="text" id="amount" placeholder="Pyragaičių kiekis" /><br />
+  <textarea placeholder="Pyragaičių tipai atskirti kabliataškiais" id="types">A;B;C;D;E</textarea><br />
+  <!--šokoladinis;vanilinis;su cukraus pudra;geltonas-->
+  <button onclick="generate()">Generuoti galimas kombinacijas</button><br />
+  <button onclick="show()">Rodyti sugeneruotas kombinacijas</button>
+  <hr />
+  <span id="answer"></span>
+</div>
+<div id="monitor"></div>
+<script>
+'use strict';
+let variants = [];
+let total = 0;
+function generate(){
+  variants = [];
+  let amount = Number(document.getElementById('amount').value);
+  let types = document.getElementById('types').value.trim().split(';');
+  let size = types.length;
+  total = Math.pow(size, amount);
+  document.getElementById('answer').innerHTML = 'Variantų kiekis = '
+  + size + '^' + amount + ' = ' + total;
+  if(total > 999999){
+    let r = confirm('Bus generuojama ' + total + ' reikšmių, tai gali užtrukti labai ilgai, ar tikrai norite tęsti?');
+    if (!r) {
+      document.getElementById('answer').innerHTML += '<br />Generavimas buvo nutrauktas';
+      return;
+    }
+  }
+  let start = performance.now();
+  for(let i = 0; i < total; i++){
+    variants.push(convert(i, amount, types));
+  }
+  document.getElementById('answer').innerHTML += '<br />Generavimas truko '
+  + (performance.now() - start).toFixed(3) + 'ms';
+}
+function show(){
+  let text = variants.map((x)=>{return '[' + x + ']'});
+  if(total > 99999){
+    let r = confirm('Bus rodoma ' + total + ' reikšmių, tai gali užtrukti labai ilgai, ar tikrai norite tęsti?');
+    if (!r) {
+      document.getElementById('answer').innerHTML += '<br />Rodymas buvo nutrauktas';
+      return;
+    }
+  }
+  document.getElementById('monitor').innerHTML = text.join(' ');
+}
+function convert(number, amount, types){
+  let arr = [];
+  let size = types.length;
+  for(let i = amount-1; i >= 0; i--){
+    arr[i] = types[number%size];
+    number = Math.floor(number/size);
+  }
+  return arr.join(',');
+}
+</script>
